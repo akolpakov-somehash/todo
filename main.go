@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"taskmanager/internal"
+	"todo/internal"
 
 	"github.com/urfave/cli/v2"
 )
@@ -24,9 +24,9 @@ func parseId(idStr string) (uint, error) {
 }
 
 func convertFilter(completed bool, pending bool) internal.ListFilter {
-	if completed == true {
+	if completed {
 		return internal.FilterCompleted
-	} else if pending == true {
+	} else if pending {
 		return internal.FilterPending
 	} else {
 		return internal.FilterAll
@@ -35,7 +35,11 @@ func convertFilter(completed bool, pending bool) internal.ListFilter {
 
 func main() {
 
-	storage := internal.NewStorageJson()
+	storage, err := internal.NewStorageJson()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
 	app := &cli.App{
 		Name:        "todo",
@@ -45,9 +49,12 @@ func main() {
 				Name:    "add",
 				Aliases: []string{"a"},
 				Usage:   "add a task to the list",
-				Action: func(cCtx *cli.Context) error {
+				Action: func(cCtx *cli.Context) (err error) {
 					description := cCtx.Args().First()
-					storage.AddTask(description)
+					err = storage.AddTask(description)
+					if err != nil {
+						return
+					}
 					fmt.Println("added task: ", description)
 					return nil
 				},
@@ -56,12 +63,15 @@ func main() {
 				Name:    "complete",
 				Aliases: []string{"c"},
 				Usage:   "complete a task on the list",
-				Action: func(cCtx *cli.Context) error {
+				Action: func(cCtx *cli.Context) (err error) {
 					taskId, err := parseId(cCtx.Args().First())
 					if err != nil {
-						return err
+						return
 					}
-					storage.CompleteTask(taskId)
+					err = storage.CompleteTask(taskId)
+					if err != nil {
+						return
+					}
 					fmt.Println("completed task: ", taskId)
 					return nil
 				},
@@ -80,11 +90,11 @@ func main() {
 					},
 				},
 				Usage: "list all tasks",
-				Action: func(cCtx *cli.Context) error {
+				Action: func(cCtx *cli.Context) (err error) {
 					filter := convertFilter(cCtx.Bool(flagCompleted), cCtx.Bool(flagPending))
 					tasks, err := storage.ListTasks(filter)
 					if err != nil {
-						return err
+						return
 					}
 					for _, task := range tasks {
 						statusEmoji := "❌"
@@ -100,12 +110,15 @@ func main() {
 				Name:    "delete",
 				Aliases: []string{"d"},
 				Usage:   "delete a task on the list",
-				Action: func(cCtx *cli.Context) error {
+				Action: func(cCtx *cli.Context) (err error) {
 					taskId, err := parseId(cCtx.Args().First())
 					if err != nil {
 						return err
 					}
-					storage.DeleteTask(taskId)
+					err = storage.DeleteTask(taskId)
+					if err != nil {
+						return
+					}
 					fmt.Println("deleted task: ", taskId)
 					return nil
 				},

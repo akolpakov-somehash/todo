@@ -1,4 +1,4 @@
-module taskmanager
+module todo
 
 go 1.21.1
 

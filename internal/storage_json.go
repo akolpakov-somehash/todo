@@ -13,7 +13,7 @@ const (
 	dirname  = ".todo"
 )
 
-func NewStorageJson() Storage {
+func NewStorageJson() (Storage, error) {
 	homedir, _ := os.UserHomeDir()
 	path := filepath.Join(homedir, dirname, filename)
 	_, err := os.Stat(path)
@@ -21,16 +21,25 @@ func NewStorageJson() Storage {
 		filepath: path,
 	}
 	if os.IsNotExist(err) {
-		os.MkdirAll(filepath.Dir(path), 0755)
-		os.Create(path)
+		err := os.MkdirAll(filepath.Dir(path), 0755)
+		if err != nil {
+			return nil, err
+		}
+		_, err = os.Create(path)
+		if err != nil {
+			return nil, err
+		}
 		initData := StorageData{
 			Increment: 1,
 			Tasks:     []*Task{},
 		}
-		storage.saveData(&initData)
+		err = storage.saveData(&initData)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	return &storage
+	return &storage, nil
 }
 
 type StorageData struct {
