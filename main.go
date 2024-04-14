@@ -38,7 +38,7 @@ func main() {
 	storage, err := internal.NewStorageJson()
 	if err != nil {
 		log.Fatal(err)
-		return
+		panic(err)
 	}
 
 	app := &cli.App{
@@ -128,5 +128,6 @@ func main() {
 
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
+		panic(err)
 	}
 }
